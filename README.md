@@ -32,3 +32,15 @@ My hands-on DevOps engineering learning environment built on Apple Silicon.
 - Argo CD
 - Prometheus
 - Grafana
+
+## Current Progress
+
+Completed:
+- Mac development environment
+- Homebrew
+- Git
+- GitHub SSH authentication
+- Git branching and pull requests
+
+Next:
+- Docker
