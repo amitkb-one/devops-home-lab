@@ -36,8 +36,12 @@ My hands-on DevOps engineering learning environment built on Apple Silicon.
 ## Current Progress
 
 Completed:
-- Git fundamentals
-- GitHub integration
+- Mac development environment
+- Homebrew
+- Git
+- GitHub SSH authentication
+- Git branching and pull requests
+- Git merge conflict resolution
 
 Next:
 - Containers
