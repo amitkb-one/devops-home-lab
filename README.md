@@ -32,3 +32,15 @@ My hands-on DevOps engineering learning environment built on Apple Silicon.
 - Argo CD
 - Prometheus
 - Grafana
+
+## Current Progress
+
+Completed:
+- Git fundamentals
+- GitHub integration
+
+Next:
+- Containers
+- Docker
+- Docker Compose
+- Kubernetes
