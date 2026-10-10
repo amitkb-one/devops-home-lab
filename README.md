@@ -41,6 +41,10 @@ Completed:
 - Git
 - GitHub SSH authentication
 - Git branching and pull requests
+- Git merge conflict resolution
 
 Next:
+- Containers
 - Docker
+- Docker Compose
+- Kubernetes
