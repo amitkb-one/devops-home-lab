@@ -1,0 +1,13 @@
+services:
+  api:
+    image: devops-task-api:distroless-test
+    build: !reset null
+    ports: !override
+      - "8003:8000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs: !override
+      - /tmp:rw,nosuid,noexec,size=32m

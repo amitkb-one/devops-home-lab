@@ -1,6 +1,14 @@
 .git
+.github
 .venv
+venv
 __pycache--
 *.pyc 
+.pytest_cache
+security-reports
+dockerfile.b4-hardening
 .env
+.env.*
+!.env.example
 .DS_store
+*.log

@@ -13,11 +13,11 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" 
-      interval: 10s 
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped 
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -28,14 +28,21 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5 
+      retries: 5
     restart: unless-stopped
-  
+
   api:
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
     build:
       context: .
       dockerfile: Dockerfile
-    image: devops-compose-api:1.0
+    image: devops-compose-api:1..0.3
     ports:
       - "127.0.0.1:${APP_PORT:-8002}:8000"
     environment:
@@ -53,4 +60,4 @@ services:
 
 volumes:
   postgres_data:
-  redis_data: 
+  redis_data:

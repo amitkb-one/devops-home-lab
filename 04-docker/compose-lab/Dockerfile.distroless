@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+
+# Stage 1: Install dependencies
+FROM python:3.13-slim-trixie AS builder
+
+WORKDIR /build
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir \
+    --target=/opt/python \
+    -r requirements.txt
+
+# Stage 2: Distroless Python runtime
+FROM gcr.io/distroless/python3-debian13:nonroot
+
+ENV PYTHONPATH=/opt/python \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY --from=builder /opt/python /opt/python
+COPY . /app
+
+# Distroless Python images run Python directly.
+# The module must be available on PYTHONPATH.
+ENV PYTHONPATH=/opt/python:/app
+
+CMD ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
