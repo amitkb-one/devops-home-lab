@@ -1,0 +1,30 @@
+name: Lab 08 - First CI Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  explore-runner:
+    name: Explore GitHub Actions Runner
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display runner information
+        run: |
+          echo "Hello from GitHub Actions!"
+          echo "Operating system:"
+          uname -a
+          echo "Current directory:"
+          pwd
+          echo "Python version:"
+          python3 --version
+
+      - name: Explore repository
+        run: |
+          echo "Repository files:"
+          ls -la
+          echo "Docker lab files:"
+          ls -la 04-docker/compose-lab/
