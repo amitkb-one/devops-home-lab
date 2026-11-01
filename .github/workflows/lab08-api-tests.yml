@@ -1,0 +1,48 @@
+
+name: Lab 08 - FastAPI CI Tests
+
+on:
+  push:
+    branches:
+      - main
+      - feature/lab08-automated-ci
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: FastAPI Unit Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: 04-docker/compose-lab
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            04-docker/compose-lab/requirements.txt
+            04-docker/compose-lab/requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run API tests
+        run: |
+          python -m pytest tests/ -v
