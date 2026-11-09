@@ -1,0 +1,36 @@
+
+name: Lab 08 - Docker Build
+
+on:
+  push:
+    branches:
+      - feature/lab08-docker-build
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    name: Build Distroless Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./04-docker/compose-lab
+          file: ./04-docker/compose-lab/Dockerfile.distroless
+          platforms: linux/amd64
+          push: false
+          tags: devops-task-api:ci-test
+
