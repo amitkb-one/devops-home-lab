@@ -1,20 +1,54 @@
-name: Lab 08 - Docker Build and Security Scan
+name: Lab 08 - Secure Container CI CD
 
 on:
   push:
     branches:
-      - feature/lab08-docker-build
+      - main
+      - feature/lab08-ghcr-publish
+
   pull_request:
     branches:
       - main
+
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: lab08-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  docker-security:
-    name: Build and Scan Distroless Image
+
+  tests:
+    name: Run FastAPI Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: ./04-docker/compose-lab
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            -r requirements.txt \
+            -r requirements-dev.txt
+
+      - name: Run pytest
+        working-directory: ./04-docker/compose-lab
+        run: |
+          python -m pytest tests/ -v
+
+  build-and-scan:
+    name: Build and Security Scan
     runs-on: ubuntu-latest
 
     steps:
@@ -30,16 +64,15 @@ jobs:
           context: ./04-docker/compose-lab
           file: ./04-docker/compose-lab/Dockerfile.distroless
           platforms: linux/amd64
-          push: false
           load: true
+          push: false
           tags: devops-task-api:ci-test
 
-      - name: Verify Docker image
+      - name: Verify image
         run: |
           docker image inspect devops-task-api:ci-test
-          docker image ls
 
-      - name: Scan image with Trivy
+      - name: Generate Trivy JSON report
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: devops-task-api:ci-test
@@ -48,17 +81,7 @@ jobs:
           severity: CRITICAL,HIGH,MEDIUM,LOW
           exit-code: '0'
 
-      - name: Trivy security gate - Critical
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: devops-task-api:ci-test
-          scan-typw: image
-          severity: CRITICAL
-          ignore-unfixed: false
-          exit-code: '1'
-          format: table
-
-      - name: Upload Trivy report
+      - name: Upload security report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -66,3 +89,85 @@ jobs:
           path: trivy-report.json
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Enforce CRITICAL security gate
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: devops-task-api:ci-test
+          severity: CRITICAL
+          exit-code: '1'
+          format: table
+
+      - name: Export validated image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker save devops-task-api:ci-test \
+            -o validated-image.tar
+          sha256sum validated-image.tar > validated-image.tar.sha256
+
+      - name: Upload validated image artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-docker-image
+          path: |
+            validated-image.tar
+            validated-image.tar.sha256
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish Image to GHCR
+    runs-on: ubuntu-latest
+
+    needs:
+      - tests
+      - build-and-scan
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Download validated image
+        uses: actions/download-artifact@v4
+        with:
+          name: validated-docker-image
+
+      - name: Verify image artifact checksum
+        run: |
+          sha256sum -c validated-image.tar.sha256
+
+      - name: Load validated Docker image
+        run: |
+          docker load -i validated-image.tar
+
+      - name: Authenticate to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and publish image
+        env:
+          IMAGE: ghcr.io/amitkb-one/devops-task-api
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          docker tag devops-task-api:ci-test \
+            "$IMAGE:sha-$COMMIT_SHA"
+
+          docker tag devops-task-api:ci-test \
+            "$IMAGE:latest"
+
+          docker push "$IMAGE:sha-$COMMIT_SHA"
+          docker push "$IMAGE:latest"
+
+      - name: Verify published image
+        env:
+          IMAGE: ghcr.io/amitkb-one/devops-task-api
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          docker manifest inspect "$IMAGE:sha-$COMMIT_SHA"
