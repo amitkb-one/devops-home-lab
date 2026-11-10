@@ -1,5 +1,4 @@
-
-name: Lab 08 - Docker Build
+name: Lab 08 - Docker Build and Security Scan
 
 on:
   push:
@@ -14,8 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  docker-build:
-    name: Build Distroless Docker Image
+  docker-security:
+    name: Build and Scan Distroless Image
     runs-on: ubuntu-latest
 
     steps:
@@ -32,5 +31,28 @@ jobs:
           file: ./04-docker/compose-lab/Dockerfile.distroless
           platforms: linux/amd64
           push: false
+          load: true
           tags: devops-task-api:ci-test
 
+      - name: Verify Docker image
+        run: |
+          docker image inspect devops-task-api:ci-test
+          docker image ls
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: devops-task-api:ci-test
+          format: json
+          output: trivy-report.json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          exit-code: '0'
+
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-report
+          path: trivy-report.json
+          if-no-files-found: warn
+          retention-days: 14
