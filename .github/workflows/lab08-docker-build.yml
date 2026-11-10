@@ -48,6 +48,16 @@ jobs:
           severity: CRITICAL,HIGH,MEDIUM,LOW
           exit-code: '0'
 
+      - name: Trivy security gate - Critical
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: devops-task-api:ci-test
+          scan-typw: image
+          severity: CRITICAL
+          ignore-unfixed: false
+          exit-code: '1'
+          format: table
+
       - name: Upload Trivy report
         if: always()
         uses: actions/upload-artifact@v4
