@@ -1,0 +1,12 @@
+{
+  "Results": [
+    {
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "TEST-CRITICAL-001",
+          "Severity": "CRITICAL"
+        }
+      ]
+    }
+  ]
+}
