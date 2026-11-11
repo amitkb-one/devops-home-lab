@@ -1,0 +1,12 @@
+{
+  "Results": [
+    {
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "TEST-HIGH-001",
+          "Severity": "HIGH"
+        }
+      ]
+    }
+  ]
+}
