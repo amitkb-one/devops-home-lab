@@ -4,3 +4,12 @@
 __pycache__/
 *.pyc
 .DS_Store
+.venv/
+.venv
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/crash.log
+**/crash.*.log
+**/*.tfvars
+**/*.tfvars.json
